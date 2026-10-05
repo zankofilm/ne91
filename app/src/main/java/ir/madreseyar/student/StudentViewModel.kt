@@ -35,7 +35,7 @@ data class UiState(
     val analysisLoading: Boolean = false
 )
 
-enum class AppTab { Home, Schedule, Homework, Exams, Reports, Attendance, More }
+enum class AppTab { Home, Schedule, Homework, Exams, Reports, Attendance, Notifications, More }
 
 class StudentViewModel(application: Application) : AndroidViewModel(application) {
     private val repository = StudentRepository(application)

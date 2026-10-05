@@ -102,6 +102,7 @@ private fun AppScaffold(state:UiState,vm:StudentViewModel,openUrl:(String)->Unit
                 AppTab.Exams -> ExamsScreen(dash,state,vm)
                 AppTab.Reports -> ReportsScreen(dash)
                 AppTab.Attendance -> AttendanceScreen(dash)
+                AppTab.Notifications -> NotificationsScreen(dash)
                 AppTab.More -> MoreScreen(dash,state,vm,openUrl)
             }
             if(state.loading) LinearProgressIndicator(Modifier.fillMaxWidth().align(Alignment.TopCenter))
@@ -136,7 +137,7 @@ private fun BottomTabs(selected:AppTab,onSelect:(AppTab)->Unit){
         Triple(AppTab.Exams,Icons.Outlined.Quiz,"آزمون"),
         Triple(AppTab.More,Icons.Outlined.MoreHoriz,"بیشتر")
     )
-    val visibleSelected=if(selected in setOf(AppTab.Reports,AppTab.Attendance)) AppTab.More else selected
+    val visibleSelected=if(selected in setOf(AppTab.Reports,AppTab.Attendance,AppTab.Notifications)) AppTab.More else selected
     NavigationBar { items.forEach{(tab,icon,label)->NavigationBarItem(selected=visibleSelected==tab,onClick={onSelect(tab)},icon={Icon(icon,null)},label={Text(label,maxLines=1,fontSize=10.sp)})} }
 }
 
@@ -178,9 +179,18 @@ private fun HomeScreen(d:DashboardData?,state:UiState,vm:StudentViewModel,openUr
         }
         item{SectionTitle("برنامه امروز",Icons.Outlined.Today)}
         if(d.todaySchedule.isEmpty()) item{CompactEmpty("برای امروز برنامه‌ای ثبت نشده است.")} else items(d.todaySchedule){ScheduleCard(it,vm,openUrl)}
+        item{SectionTitle("دسترسی سریع",Icons.Outlined.DashboardCustomize)}
+        item {
+            Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(8.dp)){
+                OutlinedButton(onClick={vm.selectTab(AppTab.Reports)},modifier=Modifier.weight(1f).height(52.dp)){Icon(Icons.Outlined.Assessment,null);Spacer(Modifier.width(5.dp));Text("کارنامه")}
+                OutlinedButton(onClick={vm.selectTab(AppTab.Attendance)},modifier=Modifier.weight(1f).height(52.dp)){Icon(Icons.Outlined.FactCheck,null);Spacer(Modifier.width(5.dp));Text("حضور و غیاب")}
+                OutlinedButton(onClick={vm.selectTab(AppTab.Notifications)},modifier=Modifier.weight(1f).height(52.dp)){Icon(Icons.Outlined.Notifications,null);Spacer(Modifier.width(5.dp));Text("اعلان‌ها")}
+            }
+        }
         item{SectionTitle("کارهای مهم",Icons.Outlined.NotificationsActive)}
         val notices=d.notifications.take(4)
         if(notices.isEmpty()) item{CompactEmpty("اعلان جدیدی نداری.")} else items(notices){n->InfoCard(n.title,n.message,Icons.Outlined.Notifications)}
+        if(d.notifications.size>4) item { TextButton(onClick={vm.selectTab(AppTab.Notifications)},modifier=Modifier.fillMaxWidth()){Text("مشاهده همه اعلان‌ها (${d.notifications.size})")} }
         item{SectionTitle("آخرین وضعیت درسی",Icons.Outlined.TrendingUp)}
         if(d.report.isEmpty()) item{CompactEmpty("هنوز نتیجه‌ای ثبت نشده است.")} else items(d.report.take(5)){r->ProgressRow(r.subject,r.percent,r.count)}
     }
@@ -384,6 +394,28 @@ private fun ReportsScreen(d:DashboardData?){
 }
 
 @Composable
+private fun NotificationsScreen(d:DashboardData?){
+    val notices=d?.notifications.orEmpty()
+    LazyColumn(Modifier.fillMaxSize(),contentPadding=PaddingValues(16.dp),verticalArrangement=Arrangement.spacedBy(10.dp)){
+        item{PageHeader("مرکز اعلان‌ها","پیام‌ها و اطلاعیه‌های مدرسه در یکجا")}
+        if(notices.isEmpty()) item{EmptyState("هنوز اعلان یا اطلاعیه‌ای برای شما ثبت نشده است.",Icons.Outlined.NotificationsNone)}
+        else items(notices){n->
+            Surface(shape=RoundedCornerShape(18.dp),border=BorderStroke(1.dp,MaterialTheme.colorScheme.outlineVariant),modifier=Modifier.fillMaxWidth()){
+                Row(Modifier.padding(16.dp),verticalAlignment=Alignment.Top){
+                    Icon(if(n.read) Icons.Outlined.Notifications else Icons.Outlined.NotificationsActive,null,tint=MaterialTheme.colorScheme.primary)
+                    Column(Modifier.weight(1f).padding(horizontal=10.dp)){
+                        Text(n.title.ifBlank{"اطلاعیه مدرسه"},fontWeight=FontWeight.Bold)
+                        if(n.message.isNotBlank()) Text(n.message,modifier=Modifier.padding(top=4.dp))
+                        if(n.at.isNotBlank()) Text(PersianDate.shortDate(n.at),style=MaterialTheme.typography.labelSmall,color=MaterialTheme.colorScheme.onSurfaceVariant,modifier=Modifier.padding(top=8.dp))
+                    }
+                    if(!n.read) StatusPill("جدید",true)
+                }
+            }
+        }
+    }
+}
+
+@Composable
 private fun AttendanceScreen(d:DashboardData?){
     val a=d?.attendance?:AttendanceSummary()
     LazyColumn(Modifier.fillMaxSize(),contentPadding=PaddingValues(16.dp),verticalArrangement=Arrangement.spacedBy(10.dp)){
@@ -411,6 +443,9 @@ private fun MoreScreen(d:DashboardData?,state:UiState,vm:StudentViewModel,openUr
                 OutlinedButton(onClick={vm.selectTab(AppTab.Reports)},modifier=Modifier.weight(1f).height(52.dp)){Icon(Icons.Outlined.Assessment,null);Spacer(Modifier.width(6.dp));Text("کارنامه")}
                 OutlinedButton(onClick={vm.selectTab(AppTab.Attendance)},modifier=Modifier.weight(1f).height(52.dp)){Icon(Icons.Outlined.FactCheck,null);Spacer(Modifier.width(6.dp));Text("حضور و غیاب")}
             }
+        }
+        item {
+            OutlinedButton(onClick={vm.selectTab(AppTab.Notifications)},modifier=Modifier.fillMaxWidth().height(52.dp)){Icon(Icons.Outlined.NotificationsActive,null);Spacer(Modifier.width(6.dp));Text("مرکز اعلان‌ها${if(d?.notifications?.isNotEmpty()==true) " · ${d.notifications.size}" else ""}")}
         }
         item { SectionTitle("پروفایل", Icons.Outlined.Person) }
         item {
