@@ -12,8 +12,8 @@ android {
         applicationId = "ir.madreseyar.student"
         minSdk = 26
         targetSdk = 35
-        versionCode = 12
-        versionName = "1.3.9"
+        versionCode = 13
+        versionName = "1.4.0"
         buildConfigField("String", "API_BASE_URL", "\"https://scooljavanrood.ir/app\"")
         vectorDrawables.useSupportLibrary = true
     }
