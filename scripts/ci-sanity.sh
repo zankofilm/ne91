@@ -4,7 +4,7 @@ for f in settings.gradle.kts build.gradle.kts app/build.gradle.kts app/src/main/
   test -f "$f" || { echo "Missing required file: $f"; exit 1; }
 done
 grep -q 'compileSdk = 35' app/build.gradle.kts
-grep -q 'versionName = "1.3.9"' app/build.gradle.kts || { echo 'FAIL: expected versionName 1.3.9'; exit 1; }
+grep -q 'versionName = "1.4.0"' app/build.gradle.kts || { echo 'FAIL: expected versionName 1.4.0'; exit 1; }
 grep -q 'https://scooljavanrood.ir/app' app/build.gradle.kts
 grep -q 'assembleDebug' .github/workflows/build-apk.yml
 grep -q 'upload-artifact@v4' .github/workflows/build-apk.yml
